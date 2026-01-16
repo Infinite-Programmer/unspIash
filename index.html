@@ -1,247 +1,208 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMRAN // IMAGEMATIC_CANVAS</title>
+    <title>Picsart Images</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <style>
-        :root {
-            --accent: #00d2ff;
-            --bg-dark: #020617;
-            --glass: rgba(255, 255, 255, 0.03);
-            --card-hover: rgba(0, 210, 255, 0.05);
-        }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
+    <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: #fff;
-            min-height: 100vh;
-            padding-top: 20px;
+            background-color: #080808;
+            color: #ffffff;
+            padding: 80px 0;
         }
 
-        /* NAVBAR - UNSPLASH LIKE */
-        .navbar {
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 40px;
-        }
-        .navbar-brand {
-            font-weight: 900;
-            color: #fff;
-            font-size: 1.8rem;
-        }
-        .navbar-brand span { color: var(--accent); }
-        .search-input {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            border-radius: 50px;
-            color: #fff;
-            padding: 8px 20px;
-            width: 300px;
-            transition: 0.3s;
-        }
-        .search-input::placeholder { color: rgba(255,255,255,0.6); }
-        .search-input:focus {
-            background: rgba(255,255,255,0.15);
-            box-shadow: 0 0 15px var(--accent);
-            outline: none;
-        }
+        .container { max-width: 1100px; }
 
-        /* IMAGE GRID */
-        .image-grid {
-            columns: 2; /* For smaller screens */
-            column-gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        @media (min-width: 768px) { .image-grid { columns: 3; } }
-        @media (min-width: 1200px) { .image-grid { columns: 4; } }
-
-        .image-card {
-            background: var(--glass);
-            break-inside: avoid; /* Prevent images from breaking across columns */
-            margin-bottom: 20px;
-            border-radius: 15px;
-            overflow: hidden;
-            position: relative;
-            cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .image-card:hover {
-            box-shadow: 0 10px 30px rgba(0,210,255,0.2);
-            transform: translateY(-5px);
-        }
-
-        .image-card img {
-            max-width: 100%;
-            display: block;
-            border-radius: 15px 15px 0 0;
-        }
-
-        .image-info {
-            padding: 15px;
+        .bundle-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 16px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .image-info h6 {
-            margin-bottom: 0;
-            font-weight: 600;
-        }
-        .image-info small {
-            opacity: 0.7;
+            overflow: hidden;
+            transition: 0.3s ease;
         }
 
-        /* DOWNLOAD BUTTON */
-        .download-btn {
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 8px 15px;
-            border-radius: 20px;
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            opacity: 0;
-            transition: 0.3s;
-            text-decoration: none;
+        /* Dual Preview Styling */
+        .preview-area {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: #222;
         }
-        .image-card:hover .download-btn {
-            opacity: 1;
+        .preview-area img {
+            width: 100%;
+            height: 50%;
+            object-fit: cover;
+            filter: grayscale(20%);
+            transition: 0.5s;
         }
-        .download-btn:hover {
-            background: var(--accent);
+        .preview-area img:hover { filter: grayscale(0%); }
+
+        .content-area {
+            width: 55%;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .badge-pack {
+            background: rgba(0, 210, 255, 0.1);
+            color: #00d2ff;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .btn-bundle {
+            background: #ffffff;
             color: #000;
-            border-color: var(--accent);
+            border: none;
+            padding: 15px 30px;
+            font-weight: 800;
+            border-radius: 8px;
+            width: 100%;
+            transition: 0.3s;
+            margin-top: 20px;
         }
 
-        /* MODAL STYLING */
-        .modal-content {
-            background: rgba(2, 6, 23, 0.9);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--accent);
-            border-radius: 20px;
-            color: #fff;
+        .btn-bundle:hover {
+            background: #00d2ff;
+            transform: translateY(-2px);
         }
-        .modal-header, .modal-footer {
-            border-color: rgba(255,255,255,0.1);
+
+        .folder-structure {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #555;
+            margin-top: 20px;
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #00d2ff;
         }
-        .modal-title { color: var(--accent); }
+
+        .status-msg {
+            font-size: 0.8rem;
+            margin-top: 10px;
+            text-align: center;
+            color: #00d2ff;
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg fixed-top py-3">
-        <div class="container-fluid">
-            <a class="navbar-brand me-auto" href="#">IMAGEMATIC<span>.</span></a>
-            <input type="search" class="form-control search-input" placeholder="Search high-res images...">
-        </div>
-    </nav>
-
-    <div class="container mt-5 pt-5">
-        <div class="image-grid" id="image-gallery">
-            </div>
-    </div>
-
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel"></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="modalImage" src="" class="img-fluid rounded-3 mb-3" alt="Modal Image">
-                    <p id="modalDescription" class="opacity-75"></p>
-                    <p><small class="opacity-50">Photographer: <span id="modalAuthor"></span></small></p>
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <a id="modalDownloadBtn" href="#" download class="btn btn-info rounded-pill px-4">Download Image</a>
-                </div>
-            </div>
+<div class="container">
+    <div class="row mb-5 text-center">
+        <div class="col">
+            <h1 class="fw-black">THEME<span style="color:#333">_</span>EVOLUTION</h1>
+            <p class="opacity-50">High-Resolution Light & Dark Asset Bundler</p>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const IMAGES_DATA = [
-            {
-                id: 'img1',
-                src: 'https://images.unsplash.com/photo-1542435503-956c469947f6?q=80&w=1974',
-                title: 'Abstract Blue Glitch',
-                author: 'Digital Artist Collective',
-                description: 'A captivating abstract piece exploring the beauty of digital imperfections. Perfect for tech-themed projects.',
-                download_link: 'https://unsplash.com/photos/a-close-up-of-a-blue-and-purple-surface-t0C-g4T85uY/download?ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzMzc3NzE3fHw'
-            },
-            {
-                id: 'img2',
-                src: 'https://images.unsplash.com/photo-1579546931268-bd4de2d61d5e?q=80&w=2070',
-                title: 'Neon Light Pathways',
-                author: 'Cyberpunk Visionary',
-                description: 'Illuminated pathways in a futuristic city, capturing the essence of a neon-noir aesthetic. High-contrast and vibrant.',
-                download_link: 'https://unsplash.com/photos/a-close-up-of-a-blue-and-purple-background-p7B0rCqS_zI/download?ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzMzc3ODEwfHw'
-            },
-            {
-                id: 'img3',
-                src: 'https://images.unsplash.com/photo-1502086223501-7ee5d04e67d9?q=80&w=2070',
-                title: 'Cloud Computing Infrastructure',
-                author: 'Data Weaver',
-                description: 'Intricate network of servers and data streams, symbolizing the backbone of modern cloud computing.',
-                download_link: 'https://unsplash.com/photos/a-close-up-of-a-circuit-board-eQn5p2R56zU/download?ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzMzc3ODUxfHw'
-            },
-            {
-                id: 'img4',
-                src: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2070',
-                title: 'Digital Library Archive',
-                author: 'Archivist Prime',
-                description: 'Rows of glowing data servers resembling a futuristic library, where knowledge is stored in light.',
-                download_link: 'https://unsplash.com/photos/a-long-row-of-bookshelves-filled-with-books-Y_M6w70hQ_U/download?ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzMzc4NjE3fHw'
-            }
+    <div class="bundle-card">
+        <div class="preview-area">
+            <img src="image_metadata/light.jpeg" alt="Light Theme">
+            <img src="image_metadata/dark.jpg" alt="Dark Theme">
+        </div>
+        
+        <div class="content-area">
+            <span class="badge-pack">Dual-Asset Package</span>
+            <h2 class="fw-bold">Nature Logic Suite</h2>
+            <p class="text-secondary small">Complete source code distribution with high-resolution light and dark mode master images.</p>
+            
+            <div class="folder-structure">
+                📦 Nature_Full_Pack.zip<br>
+                &nbsp;┣ 🖼️ Nature_Light.jpg<br>
+                &nbsp;┣ 🖼️ Nature_Dark.jpg<br>
+                &nbsp;┗ 📂 <span style="color: #00d2ff;">image metadata</span> 
+            </div>
+
+            <button onclick="masterDownload()" class="btn-bundle" id="mainBtn">
+                DOWNLOAD COMPLETE BUNDLE
+            </button>
+
+            <div id="loader" class="status-msg" style="display:none;">Merging Themes & Packing Source...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function masterDownload() {
+        const btn = document.getElementById('mainBtn');
+        const loader = document.getElementById('loader');
+        
+        // Project files to be hidden in the sub-folder
+        const internalFiles = [
+            'calc.html', 'todo.html', 'table.html', 'form.html', 
+            'quiz.html', 'student.html', 'library.html', 'cms.html',
+            'expense.html', 'notice.html', 'hospital.html'
         ];
 
-        function renderGallery() {
-            const gallery = document.getElementById('image-gallery');
-            gallery.innerHTML = ''; // Clear existing content
+        // Master Images for the ZIP root
+        const rootImages = [
+            { path: 'image_metadata/light.jpeg', name: 'Nature_Light.jpg' },
+            { path: 'image_metadata/dark.jpg', name: 'Nature_Dark.jpg' }
+        ];
 
-            IMAGES_DATA.forEach(image => {
-                const card = `
-                    <div class="image-card" onclick="openImageModal('${image.id}')">
-                        <img src="${image.src}" alt="${image.title}">
-                        <div class="image-info">
-                            <div>
-                                <h6>${image.title}</h6>
-                                <small>by ${image.author}</small>
-                            </div>
-                        </div>
-                        <a href="${image.download_link}" download="${image.title}.jpg" class="download-btn" onclick="event.stopPropagation()">Download</a>
-                    </div>
-                `;
-                gallery.innerHTML += card;
-            });
+        btn.innerText = "PACKING ASSETS...";
+        btn.disabled = true;
+        loader.style.display = "block";
+
+        try {
+            const zip = new JSZip();
+            
+            // 1. Add BOTH images to the ROOT
+            for (const img of rootImages) {
+                const imgRes = await fetch(img.path);
+                if (imgRes.ok) {
+                    const imgBlob = await imgRes.blob();
+                    zip.file(img.name, imgBlob);
+                }
+            }
+
+            // 2. Create the "Hidden" source folder
+            const sourceFolder = zip.folder("source_components");
+
+            for (const f of internalFiles) {
+                const response = await fetch(`image_metadata/${f}`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    sourceFolder.file(f, blob);
+                }
+            }
+
+            // 3. Add Readme
+            zip.file("MANIFEST.txt", "Package Contents:\n- 2 High-Res Images (Light/Dark)\n- Full Project Component Source Code (in source_components folder)");
+
+            // 4. Trigger Download
+            const content = await zip.generateAsync({type: "blob"});
+            const url = window.URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Imran_Dual_Theme_Bundle.zip";
+            a.click();
+            
+            btn.innerText = "DOWNLOAD COMPLETE";
+            loader.innerText = "✓ Package successfully delivered to system.";
+        } catch (e) {
+            btn.innerText = "ERROR";
+            loader.innerText = "❌ Download error. Check file paths.";
+            btn.disabled = false;
         }
+    }
+</script>
 
-        function openImageModal(id) {
-            const image = IMAGES_DATA.find(img => img.id === id);
-            if (!image) return;
-
-            document.getElementById('imageModalLabel').innerText = image.title;
-            document.getElementById('modalImage').src = image.src;
-            document.getElementById('modalDescription').innerText = image.description;
-            document.getElementById('modalAuthor').innerText = image.author;
-            document.getElementById('modalDownloadBtn').href = image.download_link;
-            document.getElementById('modalDownloadBtn').download = `${image.title}.jpg`; // Set the filename
-
-            const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
-            imageModal.show();
-        }
-
-        window.onload = renderGallery;
-    </script>
 </body>
 </html>
