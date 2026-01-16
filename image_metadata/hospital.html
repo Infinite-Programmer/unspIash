@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // MED_CONNECT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #00d2ff;
+            --bg-overlay: rgba(2, 6, 23, 0.88);
+            --glass: rgba(255, 255, 255, 0.05);
+            --slot-hover: rgba(0, 210, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* MODERN HOSPITAL BACKGROUND */
+            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
+                        url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=2053');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+        }
+
+        /* DOCTOR CARD */
+        .doc-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            border: 1px solid transparent;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .doc-card:hover {
+            border-color: var(--accent);
+            background: rgba(0, 210, 255, 0.05);
+            transform: translateY(-5px);
+        }
+        .doc-card.active {
+            border-color: var(--accent);
+            background: rgba(0, 210, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+        }
+
+        /* TIME SLOTS */
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .time-chip {
+            padding: 10px;
+            text-align: center;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .time-chip:hover { background: var(--slot-hover); border-color: var(--accent); }
+        .time-chip.selected { background: var(--accent); color: #000; font-weight: bold; border-color: var(--accent); }
+
+        /* NOTIFICATION MODAL (REPLACES ALERT) */
+        #status-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        .success-box {
+            background: #020617; border: 1px solid var(--accent);
+            padding: 40px; border-radius: 30px; text-align: center;
+            max-width: 400px; width: 90%; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row g-5">
+        <div class="col-lg-7">
+            <h2 class="fw-bold mb-4">Select <span style="color:var(--accent)">Specialist</span></h2>
+            <div id="doctor-list" class="row g-3">
+                </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="glass-panel sticky-top" style="top: 20px;">
+                <h4 class="fw-bold mb-4">Appointment Details</h4>
+                
+                <div class="mb-4">
+                    <label class="small opacity-50 mb-2">PICK A TIME SLOT</label>
+                    <div class="slot-grid" id="slots-container">
+                        <div class="time-chip" onclick="selectSlot(this)">09:00 AM</div>
+                        <div class="time-chip" onclick="selectSlot(this)">10:30 AM</div>
+                        <div class="time-chip" onclick="selectSlot(this)">12:00 PM</div>
+                        <div class="time-chip" onclick="selectSlot(this)">02:00 PM</div>
+                        <div class="time-chip" onclick="selectSlot(this)">03:30 PM</div>
+                        <div class="time-chip" onclick="selectSlot(this)">05:00 PM</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="small opacity-50 mb-2">PATIENT NAME</label>
+                    <input type="text" id="p-name" class="form-control bg-dark border-secondary text-white p-3 rounded-3" placeholder="Full Name">
+                </div>
+
+                <button class="btn btn-info w-100 py-3 rounded-pill fw-bold fs-5" onclick="confirmBooking()">CONFIRM BOOKING</button>
+                
+                <p class="text-center small opacity-50 mt-3 mb-0">No payment required for booking.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="status-overlay">
+    <div class="success-box">
+        <div class="display-1 text-info mb-3">✓</div>
+        <h2 class="fw-bold mb-2">BOOKED!</h2>
+        <p id="summary-text" class="opacity-75 mb-4"></p>
+        <button class="btn btn-outline-info rounded-pill px-5" onclick="closeModal()">DONE</button>
+    </div>
+</div>
+
+<script>
+    const DOCTORS = [
+        { id: 1, name: "Dr. Sarah Chen", spec: "Cardiology", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" },
+        { id: 2, name: "Dr. James Wilson", spec: "Neurology", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=James" },
+        { id: 3, name: "Dr. Elena Rodriguez", spec: "Pediatrics", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena" },
+        { id: 4, name: "Dr. Marcus Thorne", spec: "Orthopedics", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus" }
+    ];
+
+    let selectedDoc = null;
+    let selectedTime = null;
+
+    function renderDoctors() {
+        const container = document.getElementById('doctor-list');
+        container.innerHTML = DOCTORS.map(doc => `
+            <div class="col-md-6">
+                <div class="doc-card p-3 d-flex align-items-center gap-3" id="doc-${doc.id}" onclick="selectDoc(${doc.id}, '${doc.name}')">
+                    <img src="${doc.img}" width="60" class="rounded-circle bg-dark p-1 border border-secondary">
+                    <div>
+                        <h6 class="mb-0 fw-bold">${doc.name}</h6>
+                        <small class="text-info">${doc.spec}</small>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function selectDoc(id, name) {
+        document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('active'));
+        document.getElementById(`doc-${id}`).classList.add('active');
+        selectedDoc = name;
+    }
+
+    function selectSlot(el) {
+        document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedTime = el.innerText;
+    }
+
+    function confirmBooking() {
+        const pName = document.getElementById('p-name').value;
+        
+        if(!selectedDoc || !selectedTime || !pName) {
+            // Instead of alert, we highlight the missing fields or show a subtle error
+            document.querySelector('.btn-info').innerText = "MISSING INFO...";
+            setTimeout(() => document.querySelector('.btn-info').innerText = "CONFIRM BOOKING", 1500);
+            return;
+        }
+
+        document.getElementById('summary-text').innerHTML = `
+            Confirmed for <b>${pName}</b> with <br> 
+            <b>${selectedDoc}</b> at <b>${selectedTime}</b>.
+        `;
+        document.getElementById('status-overlay').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('status-overlay').style.display = 'none';
+        // Reset
+        document.getElementById('p-name').value = "";
+        document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+        document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('active'));
+        selectedDoc = null;
+        selectedTime = null;
+    }
+
+    window.onload = renderDoctors;
+</script>
+
+</body>
+</html>

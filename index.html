@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // IMAGEMATIC_CANVAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #00d2ff;
+            --bg-dark: #020617;
+            --glass: rgba(255, 255, 255, 0.03);
+            --card-hover: rgba(0, 210, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+
+        /* NAVBAR - UNSPLASH LIKE */
+        .navbar {
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 40px;
+        }
+        .navbar-brand {
+            font-weight: 900;
+            color: #fff;
+            font-size: 1.8rem;
+        }
+        .navbar-brand span { color: var(--accent); }
+        .search-input {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            padding: 8px 20px;
+            width: 300px;
+            transition: 0.3s;
+        }
+        .search-input::placeholder { color: rgba(255,255,255,0.6); }
+        .search-input:focus {
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 15px var(--accent);
+            outline: none;
+        }
+
+        /* IMAGE GRID */
+        .image-grid {
+            columns: 2; /* For smaller screens */
+            column-gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        @media (min-width: 768px) { .image-grid { columns: 3; } }
+        @media (min-width: 1200px) { .image-grid { columns: 4; } }
+
+        .image-card {
+            background: var(--glass);
+            break-inside: avoid; /* Prevent images from breaking across columns */
+            margin-bottom: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .image-card:hover {
+            box-shadow: 0 10px 30px rgba(0,210,255,0.2);
+            transform: translateY(-5px);
+        }
+
+        .image-card img {
+            max-width: 100%;
+            display: block;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .image-info {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .image-info h6 {
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        .image-info small {
+            opacity: 0.7;
+        }
+
+        /* DOWNLOAD BUTTON */
+        .download-btn {
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            opacity: 0;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+        .image-card:hover .download-btn {
+            opacity: 1;
+        }
+        .download-btn:hover {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        /* MODAL STYLING */
+        .modal-content {
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            color: #fff;
+        }
+        .modal-header, .modal-footer {
+            border-color: rgba(255,255,255,0.1);
+        }
+        .modal-title { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top py-3">
+        <div class="container-fluid">
+            <a class="navbar-brand me-auto" href="#">IMAGEMATIC<span>.</span></a>
+            <input type="search" class="form-control search-input" placeholder="Search high-res images...">
+        </div>
+    </nav>
+
+    <div class="container mt-5 pt-5">
+        <div class="image-grid" id="image-gallery">
+            </div>
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid rounded-3 mb-3" alt="Modal Image">
+                    <p id="modalDescription" class="opacity-75"></p>
+                    <p><small class="opacity-50">Photographer: <span id="modalAuthor"></span></small></p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <a id="modalDownloadBtn" href="#" download class="btn btn-info rounded-pill px-4">Download Image</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const IMAGES_DATA = [
+            {
+                id: 'img1',
+                src: 'https://images.unsplash.com/photo-1542435503-956c469947f6?q=80&w=1974',
+                title: 'Abstract Blue Glitch',
+                author: 'Digital Artist Collective',
+                description: 'A captivating abstract piece exploring the beauty of digital imperfections. Perfect for tech-themed projects.',
+                download_link: 'https://unsplash.com/photos/a-close-up-of-a-blue-and-purple-surface-t0C-g4T85uY/download?ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzMzc3NzE3fHw'
+            },
+            {
+                id: 'img2',
+                src: 'https://images.unsplash.com/photo-1579546931268-bd4de2d61d5e?q=80&w=2070',
+                title: 'Neon Light Pathways',
+                author: 'Cyberpunk Visionary',
+                description: 'Illuminated pathways in a futuristic city, capturing the essence of a neon-noir aesthetic. High-contrast and vibrant.',
+                download_link: 'https://unsplash.com/photos/a-close-up-of-a-blue-and-purple-background-p7B0rCqS_zI/download?ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzMzc3ODEwfHw'
+            },
+            {
+                id: 'img3',
+                src: 'https://images.unsplash.com/photo-1502086223501-7ee5d04e67d9?q=80&w=2070',
+                title: 'Cloud Computing Infrastructure',
+                author: 'Data Weaver',
+                description: 'Intricate network of servers and data streams, symbolizing the backbone of modern cloud computing.',
+                download_link: 'https://unsplash.com/photos/a-close-up-of-a-circuit-board-eQn5p2R56zU/download?ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzMzc3ODUxfHw'
+            },
+            {
+                id: 'img4',
+                src: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2070',
+                title: 'Digital Library Archive',
+                author: 'Archivist Prime',
+                description: 'Rows of glowing data servers resembling a futuristic library, where knowledge is stored in light.',
+                download_link: 'https://unsplash.com/photos/a-long-row-of-bookshelves-filled-with-books-Y_M6w70hQ_U/download?ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzMzc4NjE3fHw'
+            }
+        ];
+
+        function renderGallery() {
+            const gallery = document.getElementById('image-gallery');
+            gallery.innerHTML = ''; // Clear existing content
+
+            IMAGES_DATA.forEach(image => {
+                const card = `
+                    <div class="image-card" onclick="openImageModal('${image.id}')">
+                        <img src="${image.src}" alt="${image.title}">
+                        <div class="image-info">
+                            <div>
+                                <h6>${image.title}</h6>
+                                <small>by ${image.author}</small>
+                            </div>
+                        </div>
+                        <a href="${image.download_link}" download="${image.title}.jpg" class="download-btn" onclick="event.stopPropagation()">Download</a>
+                    </div>
+                `;
+                gallery.innerHTML += card;
+            });
+        }
+
+        function openImageModal(id) {
+            const image = IMAGES_DATA.find(img => img.id === id);
+            if (!image) return;
+
+            document.getElementById('imageModalLabel').innerText = image.title;
+            document.getElementById('modalImage').src = image.src;
+            document.getElementById('modalDescription').innerText = image.description;
+            document.getElementById('modalAuthor').innerText = image.author;
+            document.getElementById('modalDownloadBtn').href = image.download_link;
+            document.getElementById('modalDownloadBtn').download = `${image.title}.jpg`; // Set the filename
+
+            const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+            imageModal.show();
+        }
+
+        window.onload = renderGallery;
+    </script>
+</body>
+</html>

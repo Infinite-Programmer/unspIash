@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // EVENT_NEXUS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #00d2ff;
+            --bg-overlay: rgba(2, 6, 23, 0.9);
+            --glass: rgba(255, 255, 255, 0.04);
+            --success-glow: rgba(0, 210, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* EVENT/CONCERT THEMED BACKGROUND */
+            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
+                        url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            padding: 30px;
+        }
+
+        /* EVENT CARD STYLING */
+        .event-card {
+            border-left: 4px solid var(--accent);
+            background: rgba(255, 255, 255, 0.02);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .event-card:hover {
+            background: rgba(0, 210, 255, 0.05);
+            transform: translateX(10px);
+        }
+        .event-card.selected {
+            background: rgba(0, 210, 255, 0.15);
+            border-left-width: 8px;
+            box-shadow: 0 0 30px var(--success-glow);
+        }
+
+        /* FORM CONTROLS */
+        .form-control, .form-select {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 12px;
+            border-radius: 12px;
+        }
+        .form-control:focus {
+            background: rgba(0,0,0,0.7);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--success-glow);
+            color: #fff;
+        }
+
+        /* TICKET COUNTER ANIMATION */
+        #ticket-success {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(15px);
+        }
+        .ticket-box {
+            background: #020617;
+            border: 2px dashed var(--accent);
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            max-width: 450px;
+            animation: ticketIn 0.5s ease;
+        }
+        @keyframes ticketIn { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row g-5">
+        
+        <div class="col-12 text-center mb-4">
+            <h1 class="display-3 fw-bold">EVENT<span style="color:var(--accent)">.</span>NEXUS</h1>
+            <p class="lead opacity-75">Reserve your spot in the upcoming technological symphonies.</p>
+        </div>
+
+        <div class="col-lg-6">
+            <h4 class="fw-bold mb-4">Available Gatherings</h4>
+            <div id="event-list" class="d-flex flex-column gap-3">
+                </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="glass-panel sticky-top" style="top: 30px;">
+                <h4 class="fw-bold mb-4">Secure Registration</h4>
+                <form onsubmit="processRegistration(event)">
+                    <div class="mb-3">
+                        <label class="small opacity-50 mb-1">FULL NAME</label>
+                        <input type="text" id="reg-name" class="form-control" placeholder="Enter name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small opacity-50 mb-1">EMAIL ADDRESS</label>
+                        <input type="email" id="reg-email" class="form-control" placeholder="name@domain.com" required>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <label class="small opacity-50 mb-1">TICKET QUANTITY</label>
+                            <input type="number" id="reg-qty" class="form-control" min="1" max="5" value="1" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="small opacity-50 mb-1">CATEGORY</label>
+                            <select class="form-select">
+                                <option>Standard Entry</option>
+                                <option>VIP Access</option>
+                                <option>Backstage Pass</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-info w-100 py-3 rounded-pill fw-bold fs-5 shadow-lg">INITIALIZE RESERVATION</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="ticket-success">
+    <div class="ticket-box">
+        <div class="mb-3 fs-1">🎟️</div>
+        <h2 class="fw-bold text-info">REGISTRATION VALIDATED</h2>
+        <div class="my-4 p-3 glass-panel border-0 text-start">
+            <p class="mb-1 small opacity-50">ATTENDEE ID: <span id="ticket-id" class="text-white fw-bold"></span></p>
+            <h5 id="ticket-info" class="mb-0"></h5>
+        </div>
+        <p class="small opacity-50 mb-4">Digital ticket sent to registered email.</p>
+        <button class="btn btn-outline-info px-5 rounded-pill" onclick="closeTicket()">DOWNLOAD PDF</button>
+    </div>
+</div>
+
+<script>
+    const EVENTS = [
+        { id: 1, title: "Cyber Security Summit 2026", date: "Jan 28, 2026", loc: "Main Auditorium", capacity: "42 Spots Left" },
+        { id: 2, title: "AI Ethics & Robotics", date: "Feb 05, 2026", loc: "Lab Node 09", capacity: "12 Spots Left" },
+        { id: 3, title: "Neon Tech Music Fest", date: "Feb 14, 2026", loc: "Open Campus", capacity: "SOLD OUT" }
+    ];
+
+    let selectedEvent = "";
+
+    function renderEvents() {
+        const container = document.getElementById('event-list');
+        container.innerHTML = EVENTS.map(ev => `
+            <div class="event-card p-4 rounded-4 ${ev.capacity === 'SOLD OUT' ? 'opacity-50' : ''}" 
+                 onclick="${ev.capacity !== 'SOLD OUT' ? `selectEvent(this, '${ev.title}')` : ''}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-info fw-bold">${ev.date}</small>
+                        <h4 class="fw-bold mb-1">${ev.title}</h4>
+                        <p class="mb-0 opacity-50 small">📍 ${ev.loc}</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge ${ev.capacity === 'SOLD OUT' ? 'bg-danger' : 'bg-success'} rounded-pill">${ev.capacity}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function selectEvent(el, title) {
+        document.querySelectorAll('.event-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedEvent = title;
+    }
+
+    function processRegistration(e) {
+        e.preventDefault();
+        
+        if(!selectedEvent) {
+            alert("Please select an event from the list."); // Simple check before UI confirm
+            return;
+        }
+
+        const name = document.getElementById('reg-name').value;
+        const qty = document.getElementById('reg-qty').value;
+        const id = "NEX-" + Math.floor(100000 + Math.random() * 900000);
+
+        document.getElementById('ticket-id').innerText = id;
+        document.getElementById('ticket-info').innerText = `${qty}x Tickets for ${selectedEvent}`;
+        document.getElementById('ticket-success').style.display = 'flex';
+    }
+
+    function closeTicket() {
+        document.getElementById('ticket-success').style.display = 'none';
+        window.location.reload();
+    }
+
+    window.onload = renderEvents;
+</script>
+
+</body>
+</html>

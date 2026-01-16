@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // ARCHIVE_SYSTEM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #00d2ff;
+            --bg-overlay: rgba(2, 6, 23, 0.9);
+            --glass: rgba(255, 255, 255, 0.05);
+            --available: #00ff88;
+            --issued: #ff4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* LIBRARY THEMED BACKGROUND */
+            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
+                        url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2070');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+        }
+
+        /* STATUS BADGES */
+        .status-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        .bg-available { background: rgba(0, 255, 136, 0.1); color: var(--available); border: 1px solid var(--available); }
+        .bg-issued { background: rgba(255, 68, 68, 0.1); color: var(--issued); border: 1px solid var(--issued); }
+
+        .book-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+        .book-card:hover { background: rgba(255, 255, 255, 0.06); }
+
+        .form-control {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .btn-core {
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+            border-radius: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-12 mb-4 d-flex justify-content-between align-items-end">
+            <div>
+                <h1 class="display-4 fw-bold mb-0">ARCHIVE<span style="color:var(--accent)">.</span>OS</h1>
+                <p class="opacity-50">Central Library Resource Management</p>
+            </div>
+            <div class="text-end">
+                <h3 id="book-count" class="fw-bold text-info mb-0">0</h3>
+                <small class="text-uppercase tracking-widest">Total Volumes</small>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-panel sticky-top" style="top: 20px;">
+                <h4 class="fw-bold mb-4">Register Book</h4>
+                <form onsubmit="addBook(event)">
+                    <div class="mb-3">
+                        <label class="small opacity-50 mb-1">BOOK TITLE</label>
+                        <input type="text" id="title" class="form-control" placeholder="The Art of Code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small opacity-50 mb-1">AUTHOR</label>
+                        <input type="text" id="author" class="form-control" placeholder="Imran Khan" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="small opacity-50 mb-1">ISBN / ID</label>
+                        <input type="text" id="isbn" class="form-control" placeholder="978-3-16..." required>
+                    </div>
+                    <button type="submit" class="btn btn-core w-100 py-3">ADD TO COLLECTION</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="glass-panel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">Digital Catalog</h4>
+                    <input type="text" id="search" class="form-control w-50" placeholder="Search by title..." onkeyup="filterBooks()">
+                </div>
+
+                <div id="book-list">
+                    </div>
+
+                <div id="empty-state" class="text-center py-5 opacity-25">
+                    <h5>No Books in Catalog</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let library = JSON.parse(localStorage.getItem('library_db')) || [
+        { id: 1, title: "Quantum Physics 101", author: "Dr. Smith", isbn: "B-902", status: "Available" },
+        { id: 2, title: "Modern Web Arch", author: "Imran Khan", isbn: "B-771", status: "Issued" }
+    ];
+
+    function addBook(e) {
+        e.preventDefault();
+        const book = {
+            id: Date.now(),
+            title: document.getElementById('title').value,
+            author: document.getElementById('author').value,
+            isbn: document.getElementById('isbn').value,
+            status: "Available"
+        };
+        library.unshift(book);
+        saveAndRender();
+        e.target.reset();
+    }
+
+    function toggleStatus(id) {
+        const index = library.findIndex(b => b.id === id);
+        library[index].status = library[index].status === "Available" ? "Issued" : "Available";
+        saveAndRender();
+    }
+
+    function deleteBook(id) {
+        if(confirm("Remove book from Archive?")) {
+            library = library.filter(b => b.id !== id);
+            saveAndRender();
+        }
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('library_db', JSON.stringify(library));
+        render();
+    }
+
+    function render(data = library) {
+        const list = document.getElementById('book-list');
+        const count = document.getElementById('book-count');
+        const empty = document.getElementById('empty-state');
+        
+        count.innerText = library.length;
+        list.innerHTML = '';
+
+        if(data.length === 0) {
+            empty.style.display = 'block';
+        } else {
+            empty.style.display = 'none';
+            data.forEach(b => {
+                const statusClass = b.status === "Available" ? "bg-available" : "bg-issued";
+                list.innerHTML += `
+                    <div class="book-card p-3 mb-2 rounded-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0 fw-bold">${b.title}</h6>
+                            <small class="opacity-50">Author: ${b.author} | ID: ${b.isbn}</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="status-badge ${statusClass}" onclick="toggleStatus(${b.id})">${b.status}</span>
+                            <button class="btn btn-sm text-danger opacity-50" onclick="deleteBook(${b.id})">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    function filterBooks() {
+        const val = document.getElementById('search').value.toLowerCase();
+        const filtered = library.filter(b => b.title.toLowerCase().includes(val));
+        render(filtered);
+    }
+
+    window.onload = () => render();
+</script>
+
+</body>
+</html>

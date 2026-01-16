@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // DATA_GRID</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #00d2ff;
+            --bg-overlay: rgba(2, 6, 23, 0.9);
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
+                        url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015');
+            background-size: cover;
+            background-attachment: fixed;
+            color: #fff;
+            padding: 50px 0;
+        }
+
+        .table-container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+
+        .search-box {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 12px 20px;
+            color: #fff;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        }
+
+        /* CUSTOM TABLE STYLING */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px; /* Space between rows */
+        }
+
+        .custom-table thead th {
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            padding: 15px 20px;
+            border: none;
+        }
+
+        .custom-table tbody tr {
+            background: rgba(255, 255, 255, 0.02);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-table tbody tr td {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .custom-table tbody tr td:first-child { border-left: 1px solid rgba(255,255,255,0.05); border-radius: 15px 0 0 15px; }
+        .custom-table tbody tr td:last-child { border-right: 1px solid rgba(255,255,255,0.05); border-radius: 0 15px 15px 0; }
+
+        .custom-table tbody tr:hover {
+            background: rgba(0, 210, 255, 0.1);
+            transform: scale(1.01) translateX(5px);
+            border-color: var(--accent);
+        }
+
+        /* STATUS DOTS */
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .online { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid #00ff88; }
+        .offline { background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="table-container">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="fw-bold">SYSTEM<span style="color:var(--accent)">.</span>LOGS</h2>
+            <span class="badge bg-info text-dark">V2.4 STABLE</span>
+        </div>
+        <p class="opacity-50 mb-4">Monitoring active network nodes and user permissions.</p>
+
+        <input type="text" id="tableSearch" class="search-box" placeholder="Search data points..." onkeyup="filterTable()">
+
+        <div class="table-responsive">
+            <table class="custom-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Node ID</th>
+                        <th>User Identity</th>
+                        <th>Access Level</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-bold">#8821</td>
+                        <td>Imran Khan</td>
+                        <td><span class="opacity-75">Administrator</span></td>
+                        <td><span class="status-pill online">ACTIVE</span></td>
+                        <td><button class="btn btn-sm btn-outline-info rounded-pill">View</button></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">#4412</td>
+                        <td>Sarah Chen</td>
+                        <td><span class="opacity-75">Supervisor</span></td>
+                        <td><span class="status-pill online">ACTIVE</span></td>
+                        <td><button class="btn btn-sm btn-outline-info rounded-pill">View</button></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">#1029</td>
+                        <td>Alex Thorne</td>
+                        <td><span class="opacity-75">Technician</span></td>
+                        <td><span class="status-pill offline">OFFLINE</span></td>
+                        <td><button class="btn btn-sm btn-outline-info rounded-pill">View</button></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">#5501</td>
+                        <td>Elena Rod</td>
+                        <td><span class="opacity-75">Observer</span></td>
+                        <td><span class="status-pill online">ACTIVE</span></td>
+                        <td><button class="btn btn-sm btn-outline-info rounded-pill">View</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterTable() {
+        const input = document.getElementById("tableSearch");
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById("dataTable");
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let found = false;
+            const td = tr[i].getElementsByTagName("td");
+            for (let j = 0; j < td.length; j++) {
+                if (td[j].innerHTML.toLowerCase().indexOf(filter) > -1) {
+                    found = true;
+                }
+            }
+            tr[i].style.display = found ? "" : "none";
+        }
+    }
+</script>
+
+</body>
+</html>

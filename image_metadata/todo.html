@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // TASK_CONTROL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #00d2ff;
+            --bg-overlay: rgba(2, 6, 23, 0.9);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* WORKSPACE THEMED BACKGROUND */
+            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
+                        url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        /* TASK ITEM STYLING */
+        .task-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            animation: slideIn 0.4s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+        }
+
+        .task-item.completed {
+            opacity: 0.5;
+            background: rgba(0, 210, 255, 0.05);
+        }
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+        }
+
+        /* CUSTOM CHECKBOX */
+        .check-circle {
+            width: 24px; height: 24px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            margin-right: 15px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .completed .check-circle {
+            background: var(--accent);
+        }
+
+        .task-text { flex-grow: 1; font-size: 1.1rem; }
+
+        .btn-delete {
+            color: #ff4444; opacity: 0; transition: 0.3s;
+            background: none; border: none; font-size: 1.2rem;
+        }
+        .task-item:hover .btn-delete { opacity: 1; }
+
+        /* INPUT FIELD */
+        .input-group-cyber {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 5px;
+            display: flex;
+        }
+        .input-group-cyber input {
+            background: none; border: none; color: #fff;
+            padding: 15px; flex-grow: 1; outline: none;
+        }
+        .btn-add {
+            background: var(--accent); color: #000;
+            border-radius: 12px; padding: 0 25px;
+            font-weight: bold; border: none; transition: 0.3s;
+        }
+        .btn-add:hover { box-shadow: 0 0 20px rgba(0, 210, 255, 0.4); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold mb-0">TASK<span style="color:var(--accent)">.</span>OS</h1>
+                <p class="opacity-50 tracking-widest text-uppercase">Operational Efficiency Terminal</p>
+            </div>
+
+            <div class="glass-panel">
+                <div class="input-group-cyber mb-4">
+                    <input type="text" id="taskInput" placeholder="Initialize new task..." onkeypress="handleKey(event)">
+                    <button class="btn-add" onclick="addTask()">ADD</button>
+                </div>
+
+                <div id="taskList" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                    </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top border-secondary opacity-50 small">
+                    <span id="taskCount">0 Active Tasks</span>
+                    <span style="cursor: pointer" onclick="clearCompleted()">Clear Completed</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let tasks = JSON.parse(localStorage.getItem('cyber_tasks')) || [];
+
+    function handleKey(e) {
+        if (e.key === 'Enter') addTask();
+    }
+
+    function addTask() {
+        const input = document.getElementById('taskInput');
+        if (input.value.trim() === "") return;
+
+        const newTask = {
+            id: Date.now(),
+            text: input.value,
+            completed: false
+        };
+
+        tasks.unshift(newTask);
+        input.value = "";
+        saveAndRender();
+    }
+
+    function toggleTask(id) {
+        tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+        saveAndRender();
+    }
+
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveAndRender();
+    }
+
+    function clearCompleted() {
+        tasks = tasks.filter(t => !t.completed);
+        saveAndRender();
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('cyber_tasks', JSON.stringify(tasks));
+        render();
+    }
+
+    function render() {
+        const list = document.getElementById('taskList');
+        const count = document.getElementById('taskCount');
+        
+        list.innerHTML = '';
+        const activeTasks = tasks.filter(t => !t.completed).length;
+        count.innerText = `${activeTasks} Active Tasks`;
+
+        tasks.forEach(t => {
+            list.innerHTML += `
+                <div class="task-item ${t.completed ? 'completed' : ''}">
+                    <div class="check-circle" onclick="toggleTask(${t.id})">
+                        ${t.completed ? '✓' : ''}
+                    </div>
+                    <div class="task-text" onclick="toggleTask(${t.id})">${t.text}</div>
+                    <button class="btn-delete" onclick="deleteTask(${t.id})">✕</button>
+                </div>
+            `;
+        });
+    }
+
+    window.onload = render;
+</script>
+
+</body>
+</html>

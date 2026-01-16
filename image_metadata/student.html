@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // STUDENT OS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* --- 1. THEME ENGINE --- */
+        :root {
+            --accent: #00d2ff;
+            --accent-glow: rgba(0, 210, 255, 0.2);
+            --bg-dark: #020617;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-dark); 
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 210, 255, 0.05) 0%, transparent 40%);
+            color: #fff; min-height: 100vh;
+        }
+
+        /* --- 2. GLASS COMPONENTS --- */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* --- 3. FORM STYLING --- */
+        .form-control, .form-select {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            color: #fff; padding: 12px;
+            border-radius: 12px;
+        }
+        .form-control:focus, .form-select:focus {
+            background: rgba(0,0,0,0.5);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+            color: #fff;
+        }
+
+        /* --- 4. TABLE STYLING --- */
+        .custom-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        .custom-table thead th { 
+            color: var(--accent); text-transform: uppercase; 
+            font-size: 0.8rem; letter-spacing: 2px; border: none; padding: 15px;
+        }
+        .custom-table tbody tr {
+            background: rgba(255,255,255,0.02);
+            transition: 0.3s;
+        }
+        .custom-table tbody tr:hover {
+            transform: scale(1.01);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .custom-table td { border: none; padding: 20px; vertical-align: middle; }
+        .custom-table td:first-child { border-radius: 15px 0 0 15px; }
+        .custom-table td:last-child { border-radius: 0 15px 15px 0; }
+
+        /* --- 5. ANIMATIONS --- */
+        .row-enter { animation: slideIn 0.4s ease forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-core {
+            background: var(--accent); color: #000; font-weight: 800;
+            border-radius: 50px; padding: 12px; border: none; width: 100%; transition: 0.3s;
+        }
+        .btn-core:hover { transform: translateY(-3px); box-shadow: 0 10px 20px var(--accent-glow); }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h1 class="fw-bold display-5">STUDENT<span style="color:var(--accent)">.OS</span></h1>
+                <p class="opacity-50 mb-0">Academic Record Management System v2.4</p>
+            </div>
+            <div class="text-end">
+                <h2 class="fw-bold" id="total-students" style="color:var(--accent)">0</h2>
+                <small class="text-uppercase tracking-wide">Total Records</small>
+            </div>
+        </div>
+
+        <div class="row g-5">
+            
+            <div class="col-lg-4">
+                <div class="glass-panel p-4 sticky-top" style="top: 20px;">
+                    <h4 class="fw-bold mb-4">New Entry</h4>
+                    <form onsubmit="event.preventDefault(); addStudent();">
+                        <div class="mb-3">
+                            <label class="small opacity-50 mb-1">FULL NAME</label>
+                            <input type="text" id="name" class="form-control" placeholder="Ex: Imran Khan" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small opacity-50 mb-1">ROLL NUMBER</label>
+                            <input type="text" id="roll" class="form-control" placeholder="Ex: 26-CS-01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small opacity-50 mb-1">STREAM / COURSE</label>
+                            <select id="course" class="form-select">
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Information Tech">Information Tech</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Mechanical">Mechanical</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small opacity-50 mb-1">GPA (0 - 10)</label>
+                            <input type="number" id="gpa" class="form-control" step="0.1" min="0" max="10" placeholder="Ex: 9.2" required>
+                        </div>
+                        <button type="submit" class="btn-core">REGISTER STUDENT</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">Database</h4>
+                    <input type="text" id="search" class="form-control w-50" placeholder="Search by name..." onkeyup="filterStudents()">
+                </div>
+
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Details</th>
+                                <th>Performance</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-list">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div id="empty-state" class="text-center py-5 opacity-50">
+                    <p>NO RECORDS FOUND IN LOCAL DATABASE</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. INITIALIZE & LOAD DATA ---
+        let students = JSON.parse(localStorage.getItem('student_db')) || [];
+
+        // --- 2. ADD STUDENT LOGIC ---
+        function addStudent() {
+            const name = document.getElementById('name').value;
+            const roll = document.getElementById('roll').value;
+            const course = document.getElementById('course').value;
+            const gpa = document.getElementById('gpa').value;
+
+            // Create Object
+            const newStudent = {
+                id: Date.now(),
+                name: name,
+                roll: roll,
+                course: course,
+                gpa: parseFloat(gpa),
+                avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${name}&backgroundColor=00d2ff`
+            };
+
+            // Save
+            students.push(newStudent);
+            saveAndRender();
+            
+            // Reset Form
+            document.querySelector('form').reset();
+            document.getElementById('name').focus();
+        }
+
+        // --- 3. DELETE STUDENT ---
+        function deleteStudent(id) {
+            if(confirm('Delete this record permanently?')) {
+                students = students.filter(s => s.id !== id);
+                saveAndRender();
+            }
+        }
+
+        // --- 4. RENDER TABLE ---
+        function renderTable(data = students) {
+            const tbody = document.getElementById('student-list');
+            const empty = document.getElementById('empty-state');
+            const counter = document.getElementById('total-students');
+            
+            tbody.innerHTML = '';
+            counter.innerText = data.length;
+
+            if (data.length === 0) {
+                empty.style.display = 'block';
+            } else {
+                empty.style.display = 'none';
+                data.forEach(s => {
+                    // Logic for Color Coding GPA
+                    let badgeClass = 'text-white';
+                    if(s.gpa >= 9.0) badgeClass = 'text-success fw-bold';
+                    else if(s.gpa < 5.0) badgeClass = 'text-danger fw-bold';
+
+                    const row = `
+                        <tr class="row-enter">
+                            <td width="80">
+                                <img src="${s.avatar}" class="rounded-circle border border-secondary" width="50" height="50">
+                            </td>
+                            <td>
+                                <h6 class="fw-bold mb-0">${s.name}</h6>
+                                <small class="text-info">${s.roll}</small>
+                            </td>
+                            <td>
+                                <div class="mb-1 text-secondary small">${s.course}</div>
+                                <div class="fs-5 ${badgeClass}">${s.gpa} GPA</div>
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="deleteStudent(${s.id})">Remove</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        }
+
+        // --- 5. SEARCH FILTER ---
+        function filterStudents() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const filtered = students.filter(s => s.name.toLowerCase().includes(query));
+            renderTable(filtered);
+        }
+
+        // --- 6. UTILITIES ---
+        function saveAndRender() {
+            localStorage.setItem('student_db', JSON.stringify(students));
+            renderTable();
+        }
+
+        // Load on start
+        window.onload = () => renderTable();
+    </script>
+</body>
+</html>

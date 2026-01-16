@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // SKILL ASSESSMENT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* --- BLUE CORE THEME --- */
+        :root {
+            --accent: #00d2ff;
+            --bg-dark: #020617;
+            --glass: rgba(255, 255, 255, 0.05);
+            --correct: #00ff88;
+            --wrong: #ff4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: linear-gradient(135deg, rgba(0, 210, 255, 0.05) 0%, transparent 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        /* --- THE QUIZ CARD --- */
+        .quiz-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- PROGRESS BAR --- */
+        .progress-track {
+            position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1);
+        }
+        .progress-fill {
+            height: 100%; background: var(--accent); width: 0%; transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* --- OPTIONS STYLING --- */
+        .option-btn {
+            display: block; width: 100%; text-align: left;
+            padding: 15px 20px; margin-bottom: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; color: #fff;
+            transition: 0.3s; cursor: pointer;
+            font-size: 1.1rem;
+        }
+        
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 210, 255, 0.1);
+            border-color: var(--accent);
+            transform: translateX(10px);
+        }
+
+        /* --- FEEDBACK STATES --- */
+        .option-btn.correct { background: var(--correct) !important; color: #000; border-color: var(--correct); font-weight: bold; }
+        .option-btn.wrong { background: var(--wrong) !important; color: #fff; border-color: var(--wrong); }
+        .option-btn:disabled { cursor: no-drop; opacity: 0.8; }
+
+        /* --- SCREENS --- */
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .score-circle {
+            width: 150px; height: 150px; border-radius: 50%;
+            border: 5px solid var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 30px auto;
+            font-size: 3rem; font-weight: 900;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+
+        <div id="start-screen" class="screen active text-center">
+            <h1 class="display-4 fw-bold mb-3">SYSTEM CHECK</h1>
+            <p class="opacity-75 mb-5">Initialize 5-question technical proficiency test.</p>
+            <button class="btn btn-info btn-lg rounded-pill px-5 fw-bold" onclick="startQuiz()">INITIALIZE TEST</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="d-flex justify-content-between text-info mb-3 small fw-bold tracking-widest">
+                <span>QUESTION <span id="q-current">1</span> / <span id="q-total">5</span></span>
+                <span>TIME: UNLIMITED</span>
+            </div>
+            
+            <h3 class="fw-bold mb-4" id="question-text" style="min-height: 80px;">Question goes here?</h3>
+            
+            <div id="options-container">
+                </div>
+        </div>
+
+        <div id="result-screen" class="screen text-center">
+            <h2 class="mb-4">ANALYSIS COMPLETE</h2>
+            <div class="score-circle">
+                <span id="final-score">0</span>%
+            </div>
+            <p id="feedback-text" class="lead mb-5">Calculating performance...</p>
+            <button class="btn btn-outline-info rounded-pill px-4" onclick="location.reload()">RESTART SYSTEM</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA SOURCE ---
+        const QUIZ_DATA = [
+            {
+                q: "What does HTML stand for?",
+                options: ["Hyper Text Markup Language", "High Tech Modern Link", "Hyper Transfer Mode Linear", "Home Tool Management Layer"],
+                ans: 0
+            },
+            {
+                q: "Which CSS property is used for transparency?",
+                options: ["visible", "opacity", "transparent", "filter"],
+                ans: 1
+            },
+            {
+                q: "Inside which HTML element do we put the JavaScript?",
+                options: ["<js>", "<scripting>", "<script>", "<javascript>"],
+                ans: 2
+            },
+            {
+                q: "Which protocol is used to secure web pages?",
+                options: ["HTTP", "FTP", "HTTPS", "TCP"],
+                ans: 2
+            },
+            {
+                q: "What is the correct way to write a JavaScript array?",
+                options: ["var colors = 'red', 'green'", "var colors = (1:'red', 2:'green')", "var colors = ['red', 'green']", "var colors = {red, green}"],
+                ans: 2
+            }
+        ];
+
+        // --- STATE VARS ---
+        let currentIdx = 0;
+        let score = 0;
+        
+        // --- DOM ELEMENTS ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const qText = document.getElementById('question-text');
+        const optContainer = document.getElementById('options-container');
+        const progressBar = document.getElementById('progress');
+
+        // --- FUNCTIONS ---
+
+        function startQuiz() {
+            startScreen.classList.remove('active');
+            quizScreen.classList.add('active');
+            document.getElementById('q-total').innerText = QUIZ_DATA.length;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const data = QUIZ_DATA[currentIdx];
+            qText.innerText = data.q;
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            
+            // Update Progress Bar
+            const progressPercent = ((currentIdx) / QUIZ_DATA.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Clear previous options
+            optContainer.innerHTML = '';
+
+            // Create Buttons
+            data.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            const correctIndex = QUIZ_DATA[currentIdx].ans;
+            const allBtns = document.querySelectorAll('.option-btn');
+
+            // 1. Lock all buttons (prevent multi-click)
+            allBtns.forEach(btn => btn.disabled = true);
+
+            // 2. Validate
+            if (selectedIndex === correctIndex) {
+                btnElement.classList.add('correct');
+                score++;
+            } else {
+                btnElement.classList.add('wrong');
+                // Highlight the correct one so they learn
+                allBtns[correctIndex].classList.add('correct');
+            }
+
+            // 3. Wait 1 second, then Next
+            setTimeout(() => {
+                currentIdx++;
+                if (currentIdx < QUIZ_DATA.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1000);
+        }
+
+        function showResults() {
+            quizScreen.classList.remove('active');
+            resultScreen.classList.add('active');
+            progressBar.style.width = '100%';
+
+            const percentage = (score / QUIZ_DATA.length) * 100;
+            document.getElementById('final-score').innerText = percentage;
+
+            const feedback = document.getElementById('feedback-text');
+            if(percentage === 100) feedback.innerText = "PERFECT SCORE. SYSTEM OPTIMIZED.";
+            else if(percentage >= 60) feedback.innerText = "PASSABLE. REQUIRES OPTIMIZATION.";
+            else feedback.innerText = "CRITICAL FAILURE. RE-CALIBRATION NEEDED.";
+        }
+    </script>
+</body>
+</html>

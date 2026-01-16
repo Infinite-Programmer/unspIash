@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMRAN // EXPENSE_TRACKER</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #00d2ff;
+            --bg-overlay: rgba(2, 6, 23, 0.85);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* POWERFUL TECH BACKGROUND IMAGE */
+            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
+                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 30px;
+        }
+
+        .total-display {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
+        }
+
+        .expense-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            margin-bottom: 12px;
+            transition: 0.3s;
+            border-left: 4px solid var(--accent);
+        }
+        .expense-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(1.02);
+        }
+
+        .form-control, .form-select {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .btn-add {
+            background: var(--accent);
+            color: #000;
+            font-weight: 900;
+            border-radius: 50px;
+            border: none;
+            padding: 12px;
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row g-5">
+        
+        <div class="col-lg-5">
+            <div class="glass-card mb-4 text-center">
+                <p class="text-uppercase tracking-widest opacity-50 mb-0">Total Expenditure</p>
+                <div class="total-display">$ <span id="grand-total">0</span></div>
+            </div>
+
+            <div class="glass-card">
+                <h4 class="fw-bold mb-4">Add Transaction</h4>
+                <form id="expense-form" onsubmit="addExpense(event)">
+                    <div class="mb-3">
+                        <label class="small opacity-50">DESCRIPTION</label>
+                        <input type="text" id="desc" class="form-control" placeholder="Ex: Cloud Server Pay" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="small opacity-50">AMOUNT ($)</label>
+                            <input type="number" id="amt" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="small opacity-50">CATEGORY</label>
+                            <select id="cat" class="form-select">
+                                <option>Tech</option>
+                                <option>Food</option>
+                                <option>Travel</option>
+                                <option>Others</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-add w-100 mt-2">LOG EXPENSE</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="glass-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">Transaction History</h4>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="clearAll()">Clear All</button>
+                </div>
+                
+                <div id="expense-list" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                    </div>
+
+                <div id="empty-msg" class="text-center py-5 opacity-25">
+                    <p>No financial data logged.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let expenses = JSON.parse(localStorage.getItem('my_expenses')) || [];
+
+    function addExpense(e) {
+        e.preventDefault();
+        const expense = {
+            id: Date.now(),
+            desc: document.getElementById('desc').value,
+            amt: parseFloat(document.getElementById('amt').value),
+            cat: document.getElementById('cat').value,
+            date: new Date().toLocaleDateString()
+        };
+        expenses.unshift(expense);
+        saveAndRender();
+        e.target.reset();
+    }
+
+    function deleteItem(id) {
+        expenses = expenses.filter(x => x.id !== id);
+        saveAndRender();
+    }
+
+    function clearAll() {
+        if(confirm("Wipe all data?")) {
+            expenses = [];
+            saveAndRender();
+        }
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('my_expenses', JSON.stringify(expenses));
+        render();
+    }
+
+    function render() {
+        const list = document.getElementById('expense-list');
+        const total = document.getElementById('grand-total');
+        const empty = document.getElementById('empty-msg');
+        
+        list.innerHTML = '';
+        let sum = 0;
+
+        if(expenses.length === 0) {
+            empty.style.display = 'block';
+        } else {
+            empty.style.display = 'none';
+            expenses.forEach(x => {
+                sum += x.amt;
+                list.innerHTML += `
+                    <div class="expense-item p-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0 fw-bold">${x.desc}</h6>
+                            <small class="opacity-50">${x.date} • <span class="text-info">${x.cat}</span></small>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fw-bold fs-5">$${x.amt}</span>
+                            <button class="btn btn-sm text-danger" onclick="deleteItem(${x.id})">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        total.innerText = sum.toLocaleString();
+    }
+
+    window.onload = render;
+</script>
+
+</body>
+</html>
